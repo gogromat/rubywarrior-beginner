@@ -28,6 +28,8 @@ class Player
     if warrior.feel.empty?
       walk_or_rest
     # or attack 
+    elsif warrior.feel.captive?
+      warrior.rescue!
     else
     	warrior.attack!
     end
