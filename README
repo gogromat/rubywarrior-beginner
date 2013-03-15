@@ -1,21 +1,23 @@
-Level 5
+Level 7
 
-You hear cries for help. Captives must need rescuing.
+You feel a wall right in front of you and an opening behind you.
 
-Tip: Use warrior.feel.captive? to see if there is a captive and warrior.rescue! to rescue him. Don't attack captives.
+Tip: You are not as effective at attacking backward. Use warrior.feel.wall? and warrior.pivot! to turn around.
 
- -------
-|@ CaaSC|
- -------
+ ------
+|>a S @|
+ ------
 
   > = Stairs
   @ = GogromaT (20 HP)
-  C = Captive (1 HP)
   a = Archer (7 HP)
   S = Thick Sludge (24 HP)
 
 
 Warrior Abilities:
+
+  warrior.pivot!
+    Rotate :left, :right or :backward (default)
 
   warrior.rescue!
     Rescue a captive from his chains (earning 20 points) in given direction (forward by default).
