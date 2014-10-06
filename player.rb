@@ -1,19 +1,108 @@
 class Player
 
-  # Thoughts. 
-  # Now we walk both backward and forward
-  # We need to walk backward at first, and
-  # do the same in a loop, and then
-  # change directions and do the rest in a loop
-  @have_walked_backward_fully = false
+  FULL_HEALTH = 20
 
-
-  #instance variable to check the health
   def initialize
-    @last_health = 20
+    @direction = :right
+    @going_right = true
+    @walking_away_to_rest = false
+    @last_health = FULL_HEALTH
+  end
+  
+  def play_turn(warrior)
+    
+    @warrior = warrior
+    @direction = get_direction
+    
+    
+    if needs_rest?
+      if can_rest_here?
+        # no enemy, it's chill out here, let me rest
+        @warrior.rest!
+      else
+        # getting damage right now, need to walk away
+        walk_away!
+      end
+    else
+      @walking_away_to_rest = false
+      # no need to rest, let's see...
+      
+      if is_wall_there?
+        # it's a wall here, let's turn around
+        turn_around!
+      elsif is_captive_there?
+        # rescue captive
+        @warrior.rescue!(:backward)
+      elsif is_empty_there?
+        # nothing here, move on
+        @warrior.walk!(@direction)
+      elsif is_enemy_there?
+        # attack an enemy
+        @warrior.attack!(@direction)
+      else
+        
+      end
+      
+    end
+    
+    update_health
+  end
+  
+  def get_direction
+    return @going_right == true ? :right : :left
+  end
+  
+  def walk_away!
+    @warrior.walk!(opposite_direction)
+  end
+  
+  def opposite_direction
+    return (@direction == :left ? :right : :left)
+  end
+  
+  def turn_around!
+    @going_right = !@going_right
+    @warrior.pivot!(opposite_direction)
+    @direction = opposite_direction
+  end
+  
+  def is_wall_there?
+    @warrior.feel(@direction).wall?
+  end
+  
+  def is_captive_there?
+    @warrior.feel(@direction).captive?
+  end
+  
+  def is_enemy_there?
+    @warrior.feel(@direction).enemy?
+  end
+  
+  def is_empty_there?
+    @warrior.feel(@direction).empty?
   end
 
-  def set_new_health
+  def needs_rest?
+    if being_hit?
+      if is_enemy_there?
+        return !healthy_enough_to_fight_melee_enemy?
+      else
+        return !healthy_enough_to_fight_ranged_enemy?
+      end
+    else
+      return !full_health?
+    end
+  end
+  
+  def can_rest_here?
+    (!being_hit? && !full_health?) 
+  end
+
+  def being_hit?
+    @warrior.health < get_last_health
+  end
+
+  def update_health
     @last_health = @warrior.health
   end
 
@@ -21,79 +110,20 @@ class Player
     @last_health
   end
 
+  def full_health?
+    get_warrior_health == FULL_HEALTH
+  end
+
+  def healthy_enough_to_fight_melee_enemy?
+    get_warrior_health >= FULL_HEALTH/3
+  end
+  
+  def healthy_enough_to_fight_ranged_enemy?
+    get_warrior_health >= FULL_HEALTH/1.5
+  end
+  
   def get_warrior_health
     @warrior.health
   end
-
-  def full_health?
-    get_warrior_health == 20
-  end
-
-  def half_health?
-    get_warrior_health <= 10
-  end
-
-  def deside_on_direction
   
-    if !@have_walked_backward_fully
-
-      feel = @warrior.feel(:backward)
-
-      if feel.wall?
-        @have_walked_backward_fully = true
-        return :forward
-      else
-        return :backward
-      end
-
-    else
-      return :forward
-    end
-  end
-
-  def switch_direction(direction = :forward)
-    return (direction == :forward ? :backward : :forward)
-  end
-
-
-
-  def play_turn(warrior)
-    @warrior = warrior
-
-    direction = deside_on_direction
-
-    # check space in front
-    if warrior.feel(direction).empty?
-      walk_or_rest(direction)
-    # or attack 
-    elsif warrior.feel(direction).captive?
-      # rescue backward by default
-      warrior.rescue!(:backward)
-    else
-    	warrior.attack!(direction)
-    end
-
-    set_new_health
-  end
-
-
-  def walk_or_rest(direction = :forward)
-
-      # let warrior rest
-      if !full_health? && !being_hit?
-        # adds 2 HP 
-        @warrior.rest!
-      #being hit, need to go different direction
-      elsif being_hit? && half_health?
-        @warrior.walk!(switch_direction(direction))
-      # go forward
-      else
-        @warrior.walk!(direction)
-      end
-  end
-
-  def being_hit?
-    @warrior.health < get_last_health
-  end
-
 end
